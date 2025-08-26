@@ -1,0 +1,173 @@
+--[[
+    Script Rayfield Aimbot + Key System + Admin Abuse (PC/Sirius)
+    by SpiderDev Rayfield
+    Menu Abuse com botão GodMode liberado para todos no menu Aimbot (exemplo básico)
+]]
+
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+if not Rayfield or type(Rayfield.CreateWindow) ~= "function" then
+    warn("Rayfield UI não carregou! Script só funciona em PC/Sirius.")
+    return
+end
+
+Rayfield:Notify({
+    Title = "Atenção!",
+    Content = "Script exclusivo para PC/Sirius. Não funciona em celular.",
+    Duration = 8,
+})
+
+local KEY_CORRETA = "SPIDERDEV2024"
+local liberado = false
+
+local function KeySystem()
+    local win = Rayfield:CreateWindow({
+        Name = "Aimbot Key System | SpiderDev",
+        LoadingTitle = "Key System",
+        LoadingSubtitle = "Pegue sua key no Discord!",
+        ConfigurationSaving = {Enabled = false},
+        Discord = {Enabled = false},
+        KeySystem = false,
+    })
+    local keyTab = win:CreateTab("Key", 6035067836)
+    keyTab:CreateSection("Obtenha sua key no Discord:")
+    keyTab:CreateButton({
+        Name = "Copiar Link do Discord",
+        Callback = function()
+            if setclipboard then
+                setclipboard("https://discord.gg/sSKmjQURTB")
+            end
+            Rayfield:Notify({
+                Title = "Link Copiado!",
+                Content = "Cole no navegador para entrar.",
+                Duration = 3,
+            })
+        end,
+    })
+    keyTab:CreateSection("Digite sua Key")
+    local inputKey = ""
+    keyTab:CreateInput({
+        Name = "Key",
+        PlaceholderText = "Digite a key aqui...",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(Value)
+            inputKey = Value
+        end,
+    })
+    keyTab:CreateButton({
+        Name = "Verificar Key",
+        Callback = function()
+            if string.lower(inputKey) == string.lower(KEY_CORRETA) then
+                liberado = true
+                Rayfield:Notify({
+                    Title = "Sucesso!",
+                    Content = "Key correta. Menu liberado!",
+                    Duration = 3,
+                })
+                task.wait(1.5)
+                win:Destroy()
+            else
+                Rayfield:Notify({
+                    Title = "Key Incorreta",
+                    Content = "Pegue a key correta no Discord!",
+                    Duration = 3,
+                })
+            end
+        end,
+    })
+    while not liberado do
+        task.wait(0.5)
+    end
+end
+KeySystem()
+
+local Camera = workspace.CurrentCamera
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local AimbotAtivado = false
+local GodModeAtivado = false
+
+local function GetClosestPlayerToMouse()
+    local closestPlayer, minDist = nil, math.huge
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") and player.Character:FindFirstChildOfClass("Humanoid") and player.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+            local headPos = player.Character.Head.Position
+            local screenPos, onScreen = Camera:WorldToViewportPoint(headPos)
+            if onScreen then
+                local mousePos = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+                local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    closestPlayer = player
+                end
+            end
+        end
+    end
+    return closestPlayer
+end
+
+local MainWin = Rayfield:CreateWindow({
+    Name = "Aimbot | SpiderDev",
+    ConfigurationSaving = {Enabled = false},
+})
+
+local AimbotTab = MainWin:CreateTab("Aimbot", 6035067836)
+AimbotTab:CreateSection("Aimbot Instantâneo")
+AimbotTab:CreateToggle({
+    Name = "Aimbot (Vira tela para cabeça)",
+    CurrentValue = false,
+    Callback = function(val)
+        AimbotAtivado = val
+        Rayfield:Notify({
+            Title = val and "Aimbot ON" or "Aimbot OFF",
+            Content = val and "Mira automática ativada." or "Mira automática desativada.",
+            Duration = 2,
+        })
+    end,
+})
+
+RunService.RenderStepped:Connect(function()
+    if AimbotAtivado then
+        local enemy = GetClosestPlayerToMouse()
+        if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, enemy.Character.Head.Position)
+        end
+    end
+end)
+
+AimbotTab:CreateSection("Admin Abuse (todo sábado atualização!)")
+AimbotTab:CreateButton({
+    Name = "God Mode (Ativado para todos!)",
+    Callback = function()
+        GodModeAtivado = not GodModeAtivado
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if GodModeAtivado and hum then
+            hum.Name = "GodHumanoid"
+            hum.Health = math.huge
+            hum.MaxHealth = math.huge
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            Rayfield:Notify({
+                Title = "God Mode Ativado!",
+                Content = "Você está imortal.",
+                Duration = 4,
+            })
+        else
+            if hum then
+                hum.Name = "Humanoid"
+                hum.Health = hum.MaxHealth
+                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            end
+            Rayfield:Notify({
+                Title = "God Mode Desativado!",
+                Content = "Imortalidade removida.",
+                Duration = 4,
+            })
+        end
+    end,
+})
+
+AimbotTab:CreateSection("Créditos")
+AimbotTab:CreateParagraph({
+    Title = "Script by SpiderDev Rayfield",
+    Content = "Key apenas no Discord: https://discord.gg/sSKmjQURTB\nEvery Saturday the menu gets a new Admin Abuse update. God Mode is now available for everyone!"
+})
